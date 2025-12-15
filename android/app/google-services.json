@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "497150539716",
+    "project_id": "ai-chat-app-shodiyor",
+    "storage_bucket": "ai-chat-app-shodiyor.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:497150539716:android:f6f07bd0fe8f5cbc731691",
+        "android_client_info": {
+          "package_name": "com.example.chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "497150539716-a562nh27irlp8krjh080238nqsk6ovm6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN1rWaMsWTAVurSbsPA43aM6AoG7WsyPA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "497150539716-a562nh27irlp8krjh080238nqsk6ovm6.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "497150539716-bh0upmb79dfo7flt8lq5p0gg8765q6lb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.chat-shodiyor"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
