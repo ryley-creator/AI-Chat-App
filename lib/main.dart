@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:chat/pages/login_or_register_page.dart';
 
 import 'imports/imports.dart';
 
@@ -58,7 +58,6 @@ void main() async {
           create: (context) => ChatBloc(GeminiService(getApiKey(), getModel())),
           child: MyApp(),
         ),
-        BlocProvider(create: (_) => AuthBloc(AuthService())),
       ],
       child: MyApp(),
     ),
@@ -111,19 +110,20 @@ class _MyAppState extends State<MyApp> {
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key, required this.function});
   final VoidCallback function;
+
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(body: Center(child: Text('Loading')));
-        }
-        if (snapshot.hasData) {
-          return ChatPage(function: function);
-        }
-        return LoginPage();
-      },
+    return Scaffold(
+      body: StreamBuilder(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return ChatPage(function: function);
+          } else {
+            return LoginOrRegisterPage();
+          }
+        },
+      ),
     );
   }
 }

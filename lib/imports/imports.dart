@@ -1,5 +1,4 @@
-export 'package:chat/bloc/auth/auth_bloc.dart';
-export 'package:chat/bloc/chat/chat_bloc.dart';
+export 'package:chat/bloc/chat_bloc.dart';
 export 'package:chat/firebase/firebase_options.dart';
 export 'package:chat/pages/chat_page.dart';
 export 'package:chat/pages/login_page.dart';

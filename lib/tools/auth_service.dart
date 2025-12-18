@@ -1,37 +1,42 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth auth = FirebaseAuth.instance;
-
-  Future<User?> login(String email, String password) async {
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  Future<UserCredential> login(String email, String password) async {
     try {
-      final user = await auth.signInWithEmailAndPassword(
+      UserCredential user = await auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return user.user;
-    } catch (error) {
-      print('Login error: $error');
-      return null;
+      firestore.collection('users').doc(user.user!.uid).set({
+        'uid': user.user!.uid,
+        'email': email,
+      });
+      return user;
+    } on FirebaseAuthException catch (error) {
+      throw Exception(error.code);
     }
   }
 
-  Future<User?> signUp(String email, String password) async {
+  Future<UserCredential> signUp(String email, String password) async {
     try {
-      final user = await auth.createUserWithEmailAndPassword(
+      UserCredential user = await auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return user.user;
-    } catch (error) {
-      print('Sign up error: $error');
-      return null;
+      firestore.collection('users').doc(user.user!.uid).set({
+        'uid': user.user!.uid,
+        'email': email,
+      });
+      return user;
+    } on FirebaseAuthException catch (error) {
+      throw Exception(error.code);
     }
   }
 
   Future<void> logOut() async {
     await auth.signOut();
   }
-
-  Stream<User?> authState() => auth.authStateChanges();
 }

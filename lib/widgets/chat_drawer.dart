@@ -3,6 +3,7 @@ import '../imports/imports.dart';
 class ChatDrawer extends StatelessWidget {
   ChatDrawer({super.key});
   final FirebaseAuth user = FirebaseAuth.instance;
+  final AuthService auth = AuthService();
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ChatBloc, ChatState>(
@@ -46,6 +47,8 @@ class ChatDrawer extends StatelessWidget {
                             ),
                           ),
                   ),
+
+                  SizedBox(height: 10),
                   Text(
                     user.currentUser!.email.toString(),
                     style: TextStyle(
@@ -56,11 +59,7 @@ class ChatDrawer extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () {
-                      context.read<AuthBloc>().add(LogOutEvent());
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginPage()),
-                      );
+                      auth.logOut();
                     },
                     child: Row(
                       children: [

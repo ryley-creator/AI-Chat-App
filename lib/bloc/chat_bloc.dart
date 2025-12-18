@@ -44,36 +44,33 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   void onStartNewChat(StartNewChat event, Emitter<ChatState> emit) async {
-    if (state.messages.isEmpty) return;
-    final isFromHistory = state.sessionId != null;
-
-    if (!isFromHistory) {
+    if (state.messages.isNotEmpty && !state.openedFromHistory) {
       final newSession = History(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
         createdAt: DateTime.now(),
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
         messages: state.messages,
         title: 'Generating...',
       );
-
       final newHistory = [...state.history, newSession];
-
       emit(
         state.copyWith(
-          history: newHistory,
           messages: [],
-          status: ChatStatus.loaded,
-          sessionId: null,
+          history: [...state.history, newSession],
+          openedFromHistory: true,
         ),
       );
-
+      final lastIndex = newHistory.length - 1;
       final summary = await generateTitle(newSession.messages);
-
       final updatedHistory = [...newHistory];
-      updatedHistory.last = updatedHistory.last.copyWith(title: summary);
-
+      updatedHistory[lastIndex] = History(
+        createdAt: newSession.createdAt,
+        id: newSession.id,
+        messages: newSession.messages,
+        title: summary,
+      );
       emit(state.copyWith(history: updatedHistory));
     } else {
-      emit(state.copyWith(messages: [], sessionId: null));
+      emit(state.copyWith(messages: [], openedFromHistory: false));
     }
   }
 

@@ -7,13 +7,13 @@ class ChatState extends Equatable {
     this.messages = const [],
     this.status = ChatStatus.initial,
     this.history = const [],
-    this.sessionId,
+    this.openedFromHistory = false,
   });
 
   final List<Message> messages;
   final List<History> history;
   final ChatStatus status;
-  final String? sessionId;
+  final bool openedFromHistory;
 
   ChatState copyWith({
     List<Message>? messages,
@@ -26,10 +26,10 @@ class ChatState extends Equatable {
       messages: messages ?? this.messages,
       status: status ?? this.status,
       history: history ?? this.history,
-      sessionId: sessionId ?? this.sessionId,
+      openedFromHistory: openedFromHistory ?? this.openedFromHistory,
     );
   }
 
   @override
-  List<Object?> get props => [messages, status, history, sessionId];
+  List<Object?> get props => [messages, status, history, openedFromHistory];
 }
