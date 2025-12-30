@@ -22,6 +22,7 @@ class ChatBubble extends StatelessWidget {
                     File(message.imagePath!),
                     width: 150,
                     height: 200,
+                    fit: BoxFit.cover,
                   ),
                 ),
                 ConstrainedBox(

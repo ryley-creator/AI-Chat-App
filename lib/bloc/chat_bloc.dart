@@ -1,9 +1,10 @@
 import 'package:bloc/bloc.dart';
 import 'package:chat/models/history.dart';
 import 'package:chat/models/message.dart';
-import 'package:chat/tools/gemini_service.dart';
+import 'package:chat/tools/ai_api_services.dart';
 import 'package:chat/tools/history_service.dart';
 import 'package:chat/tools/image.dart';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:image_picker/image_picker.dart';
 part 'chat_event.dart';
@@ -25,7 +26,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<LogoutChat>(onLogoutChat);
     on<DeleteChat>(onDeleteChat);
     on<SendImageMessage>(onSendImageMessage);
-    // on<SendUserInput>(onSendUserInput);
   }
   final ApiService geminiService;
   final HistoryService historyService;
@@ -35,83 +35,108 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(const ChatState());
   }
 
-  // Future<void> onSendUserInput(
-  //   SendUserInput event,
-  //   Emitter<ChatState> emit,
-  // ) async {
-  //   if (state.status == ChatStatus.loading) return;
-  //   final hasImage = state.pendingImage != null;
-  //   final prompt = event.text.isEmpty ? 'What is in the image' : event.text;
-  //   if (hasImage) {
-  //     add(SendImageMessage(state.pendingImage!, prompt, event.uid));
-  //   } else {
-  //     add(SendMessage(prompt, event.uid));
-  //   }
-  // }
-
   Future<void> onSendImageMessage(
     SendImageMessage event,
     Emitter<ChatState> emit,
   ) async {
-    if (state.status == ChatStatus.loading) return;
+    try {
+      if (state.status == ChatStatus.loading) return;
 
-    final userMessage = Message(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      isUser: true,
-      text: event.propmt,
-      imagePath: event.image.path,
-    );
-
-    List<Message> messages = [...state.messages, userMessage];
-    emit(
-      state.copyWith(
-        messages: messages,
-        status: ChatStatus.loading,
-        pendingImage: null,
-      ),
-    );
-
-    String? sessionId = state.activeSessionId;
-    if (sessionId == null) {
-      sessionId = await historyService.createChat(
-        event.uid,
-        messages,
-        'Analyzing image...',
+      final userMessage = Message(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        isUser: true,
+        text: event.propmt,
+        imagePath: event.image.path,
       );
+
+      List<Message> messages = [...state.messages, userMessage];
       emit(
         state.copyWith(
+          messages: messages,
+          status: ChatStatus.loading,
           pendingImage: null,
-          activeSessionId: sessionId,
-          history: [
-            ...state.history,
-            History(
-              createdAt: DateTime.now(),
-              id: sessionId,
-              messages: messages,
-              title: 'Analyzing image...',
-            ),
-          ],
         ),
       );
-    }
-    final base64Image = await imageToBase64(event.image);
-    final response = await imageToTextService.sendImageMessage(
-      prompt: event.propmt,
-      base64Image: base64Image,
-    );
-    final aiMessage = Message(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      isUser: false,
-      text: response,
-    );
-    messages = [...state.messages, aiMessage];
 
-    await historyService.updateChatMessages(
-      uid: event.uid,
-      chatId: sessionId,
-      messages: messages,
-    );
-    emit(state.copyWith(messages: messages, status: ChatStatus.loaded));
+      String? sessionId = state.activeSessionId;
+      if (sessionId == null) {
+        sessionId = await historyService.createChat(
+          event.uid,
+          messages,
+          'Analyzing image...',
+        );
+        emit(
+          state.copyWith(
+            pendingImage: null,
+            activeSessionId: sessionId,
+            history: [
+              ...state.history,
+              History(
+                createdAt: DateTime.now(),
+                id: sessionId,
+                messages: messages,
+                title: 'Analyzing image...',
+              ),
+            ],
+          ),
+        );
+      }
+      final base64Image = await imageToBase64(event.image);
+      final response = await imageToTextService.sendImageMessage(
+        prompt: event.propmt,
+        base64Image: base64Image,
+      );
+      final aiMessage = Message(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        isUser: false,
+        text: response,
+      );
+      messages = [...state.messages, aiMessage];
+
+      await historyService.updateChatMessages(
+        uid: event.uid,
+        chatId: sessionId,
+        messages: messages,
+      );
+
+      if (messages.length == 2) {
+        final title = await generateTitle(messages);
+
+        await historyService.updateChatTitle(
+          uid: event.uid,
+          chatId: sessionId,
+          title: title,
+        );
+
+        final updatedHistory = [...state.history];
+        final index = updatedHistory.indexWhere((h) => h.id == sessionId);
+
+        if (index != -1) {
+          updatedHistory[index] = updatedHistory[index].copyWith(title: title);
+
+          emit(state.copyWith(history: updatedHistory));
+        }
+      }
+      emit(state.copyWith(messages: messages, status: ChatStatus.loaded));
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 402) {
+        emit(
+          state.copyWith(
+            status: ChatStatus.loaded,
+            messages: [
+              ...state.messages,
+              Message(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                isUser: false,
+                text:
+                    '⚠️ Image analysis is currently unavailable. Please add credits to use this feature.',
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    }
   }
 
   Future<void> onSendMessage(SendMessage event, Emitter<ChatState> emit) async {

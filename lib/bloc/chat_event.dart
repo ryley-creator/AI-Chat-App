@@ -18,6 +18,9 @@ class SendImageMessage extends ChatEvent {
 class AttachImage extends ChatEvent {
   final XFile image;
   const AttachImage(this.image);
+
+  @override
+  List<Object> get props => [image];
 }
 
 class ClearAttachedImage extends ChatEvent {}

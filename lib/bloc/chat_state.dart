@@ -29,7 +29,7 @@ class ChatState extends Equatable {
       status: status ?? this.status,
       history: history ?? this.history,
       activeSessionId: activeSessionId ?? this.activeSessionId,
-      pendingImage: pendingImage ?? this.pendingImage,
+      pendingImage: pendingImage,
     );
   }
 

@@ -4,7 +4,7 @@ export 'package:chat/pages/chat_page.dart';
 export 'package:chat/pages/login_page.dart';
 export 'package:chat/tools/api_key.dart';
 export 'package:chat/tools/auth_service.dart';
-export 'package:chat/tools/gemini_service.dart';
+export 'package:chat/tools/ai_api_services.dart';
 export 'package:firebase_auth/firebase_auth.dart';
 export 'package:firebase_core/firebase_core.dart';
 export 'package:flutter/material.dart';

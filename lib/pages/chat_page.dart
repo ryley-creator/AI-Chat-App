@@ -22,9 +22,6 @@ class _ChatPageState extends State<ChatPage> {
         scrollDown();
       }
     });
-    // context.read<ChatBloc>().add(
-    //   LoadUserHistory(FirebaseAuth.instance.currentUser!.uid),
-    // );
   }
 
   void scrollDown() {
@@ -49,8 +46,6 @@ class _ChatPageState extends State<ChatPage> {
       },
       child: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
-          print(state.activeSessionId);
-          //zY6kODsQmefxg4CxRjI5
           return GestureDetector(
             onTap: () =>
                 FocusScope.of(context).focusInDirection(TraversalDirection.up),

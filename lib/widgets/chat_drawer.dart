@@ -1,5 +1,3 @@
-import 'package:chat/pages/image_generator_page.dart';
-
 import '../imports/imports.dart';
 
 class ChatDrawer extends StatelessWidget {

@@ -1,6 +1,5 @@
-import 'dart:convert';
+// ignore_for_file: use_build_context_synchronously
 import 'dart:io';
-
 import 'package:chat/imports/imports.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -81,6 +80,7 @@ class ChatTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ChatBloc, ChatState>(
+      buildWhen: (prev, curr) => prev.pendingImage != curr.pendingImage,
       builder: (context, state) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,6 +113,11 @@ class ChatTextField extends StatelessWidget {
               ),
             Row(
               children: [
+                IconButton(
+                  onPressed: () => _showImagePicker(context),
+                  icon: Icon(Icons.add, size: 35),
+                ),
+                SizedBox(width: 3),
                 Expanded(
                   child: TextField(
                     focusNode: focusNode,
@@ -123,27 +128,10 @@ class ChatTextField extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade800,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    onPressed: () => _showImagePicker(context),
-                    icon: Icon(Icons.add),
-                  ),
-                ),
                 SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade800,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    onPressed: () => _onSend(context, state),
-                    icon: Icon(Icons.arrow_upward),
-                  ),
+                IconButton(
+                  onPressed: () => _onSend(context, state),
+                  icon: Icon(Icons.send, size: 35),
                 ),
               ],
             ),
