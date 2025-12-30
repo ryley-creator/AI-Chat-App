@@ -28,22 +28,24 @@ class History {
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'title': title,
       'createdAt': createdAt,
-      'messages': messages.map((m) => m.toMap()).toList(),
+      'messages': messages.map((m) => m.toJson()).toList(),
     };
   }
 
-  factory History.fromMap(Map<String, dynamic> map) {
+  factory History.fromJson(String id, Map<String, dynamic> json) {
+    final ts = json['createdAt'];
+
     return History(
-      id: map['id'],
-      title: map['title'],
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
-      messages: (map['messages'] as List<dynamic>)
-          .map((m) => Message.fromMap(m))
+      id: id,
+      title: json['title'] ?? '',
+      createdAt: ts is Timestamp ? ts.toDate() : DateTime.now(),
+      messages: (json['messages'] as List<dynamic>? ?? [])
+          .map((m) => Message.fromJson(m))
           .toList(),
     );
   }

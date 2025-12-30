@@ -21,6 +21,15 @@ class _LoginPageState extends State<LoginPage> {
     final AuthService auth = AuthService();
     try {
       await auth.login(email.text, password.text);
+
+      // После успешного входа
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        context.read<ChatBloc>().add(LoadUserHistory(user.uid));
+      }
+
+      // Обновляем текст кнопки
+      onTextChanged('Logging in...');
     } catch (error) {
       ScaffoldMessenger.of(
         context,
@@ -92,7 +101,6 @@ class _LoginPageState extends State<LoginPage> {
                 onTap: () {
                   login();
                   FocusScope.of(context).unfocus();
-                  onTextChanged('Logging in...');
                 },
                 child: LoginContainer(text: currentText),
               ),

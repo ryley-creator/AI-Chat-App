@@ -7,29 +7,38 @@ class ChatState extends Equatable {
     this.messages = const [],
     this.status = ChatStatus.initial,
     this.history = const [],
-    this.openedFromHistory = false,
+    this.activeSessionId,
+    this.pendingImage,
   });
 
   final List<Message> messages;
   final List<History> history;
   final ChatStatus status;
-  final bool openedFromHistory;
+  final String? activeSessionId;
+  final XFile? pendingImage;
 
   ChatState copyWith({
     List<Message>? messages,
     ChatStatus? status,
     List<History>? history,
-    bool? openedFromHistory,
-    String? sessionId,
+    String? activeSessionId,
+    XFile? pendingImage,
   }) {
     return ChatState(
       messages: messages ?? this.messages,
       status: status ?? this.status,
       history: history ?? this.history,
-      openedFromHistory: openedFromHistory ?? this.openedFromHistory,
+      activeSessionId: activeSessionId ?? this.activeSessionId,
+      pendingImage: pendingImage ?? this.pendingImage,
     );
   }
 
   @override
-  List<Object?> get props => [messages, status, history, openedFromHistory];
+  List<Object?> get props => [
+    messages,
+    status,
+    history,
+    activeSessionId,
+    pendingImage,
+  ];
 }

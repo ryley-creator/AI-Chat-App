@@ -1,3 +1,5 @@
+import 'package:chat/pages/image_generator_page.dart';
+
 import '../imports/imports.dart';
 
 class ChatDrawer extends StatelessWidget {
@@ -25,6 +27,7 @@ class ChatDrawer extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
+
                       user.currentUser!.photoURL != null
                           ? Image.network(user.currentUser!.photoURL.toString())
                           : Icon(Icons.person),
@@ -38,6 +41,38 @@ class ChatDrawer extends StatelessWidget {
                             itemCount: state.history.length,
                             itemBuilder: (context, index) => ListTile(
                               title: Text(state.history[index].title),
+                              onLongPress: () => showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  content: Text(
+                                    'Do you really want to delete this chat?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        context.read<ChatBloc>().add(
+                                          DeleteChat(
+                                            state.history[index].id,
+                                            FirebaseAuth
+                                                .instance
+                                                .currentUser!
+                                                .uid,
+                                          ),
+                                        );
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: Text('Cancel'),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               onTap: () {
                                 context.read<ChatBloc>().add(
                                   LoadChat(state.history[index]),
@@ -59,6 +94,7 @@ class ChatDrawer extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () {
+                      context.read<ChatBloc>().add(LogoutChat());
                       auth.logOut();
                     },
                     child: Row(

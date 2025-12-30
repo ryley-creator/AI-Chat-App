@@ -1,15 +1,26 @@
 class Message {
-  final String text;
+  String text;
   final bool isUser;
   final String id;
+  final String? imagePath;
 
-  Message({required this.id, required this.isUser, required this.text});
+  Message({
+    required this.id,
+    required this.isUser,
+    required this.text,
+    this.imagePath,
+  });
 
-  Map<String, dynamic> toMap() {
-    return {'text': text, 'isUser': isUser};
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'text': text, 'isUser': isUser, 'imagePath': imagePath};
   }
 
-  factory Message.fromMap(Map<String, dynamic> map) {
-    return Message(text: map['text'], isUser: map['isUser'], id: map['id']);
+  factory Message.fromJson(Map<String, dynamic> map) {
+    return Message(
+      id: DateTime.now().microsecondsSinceEpoch.toString(), // локальный id
+      text: map['text'] ?? '',
+      isUser: map['isUser'] ?? false,
+      imagePath: map['imagePath'],
+    );
   }
 }

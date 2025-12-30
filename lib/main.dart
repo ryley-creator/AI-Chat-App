@@ -1,4 +1,6 @@
+import 'package:chat/bloc/image_bloc.dart';
 import 'package:chat/pages/login_or_register_page.dart';
+import 'package:chat/tools/history_service.dart';
 
 import 'imports/imports.dart';
 
@@ -55,9 +57,11 @@ void main() async {
     MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => ChatBloc(GeminiService(getApiKey(), getModel())),
-          child: MyApp(),
+          create: (context) =>
+              ChatBloc(ApiService(), HistoryService(), ImageToTextService())
+                ..add(LoadUserHistory(FirebaseAuth.instance.currentUser!.uid)),
         ),
+        BlocProvider(create: (context) => ImageBloc(ImageService())),
       ],
       child: MyApp(),
     ),

@@ -1,3 +1,5 @@
+import 'package:chat/pages/image_generator_page.dart';
+
 import '../imports/imports.dart';
 
 class ChatPage extends StatefulWidget {
@@ -20,6 +22,9 @@ class _ChatPageState extends State<ChatPage> {
         scrollDown();
       }
     });
+    // context.read<ChatBloc>().add(
+    //   LoadUserHistory(FirebaseAuth.instance.currentUser!.uid),
+    // );
   }
 
   void scrollDown() {
@@ -44,6 +49,8 @@ class _ChatPageState extends State<ChatPage> {
       },
       child: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
+          print(state.activeSessionId);
+          //zY6kODsQmefxg4CxRjI5
           return GestureDetector(
             onTap: () =>
                 FocusScope.of(context).focusInDirection(TraversalDirection.up),
@@ -66,7 +73,18 @@ class _ChatPageState extends State<ChatPage> {
                         ),
                       );
                     },
-                    icon: Icon(Icons.create),
+                    icon: Icon(Icons.create_sharp),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ImageGeneratorPage(),
+                        ),
+                      );
+                    },
+                    icon: Icon(Icons.image),
                   ),
                 ],
               ),
@@ -99,7 +117,7 @@ class _ChatPageState extends State<ChatPage> {
                             ChatTextField(
                               focusNode: myFocusNode,
                               controller: controller,
-                              f: scrollDown,
+                              scrollToBottom: scrollDown,
                             ),
                           ],
                         ),

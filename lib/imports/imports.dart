@@ -18,3 +18,6 @@ export '../widgets/login_container.dart';
 export '../widgets/continue_with.dart';
 export '../pages/forgot_password_page.dart';
 export '../pages/sign_up_page.dart';
+export 'package:chat/models/history.dart';
+export 'package:chat/models/message.dart';
+export 'package:cloud_firestore/cloud_firestore.dart';
