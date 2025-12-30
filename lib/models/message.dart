@@ -6,6 +6,7 @@ class Message extends Equatable {
   final String id;
   final String? imagePath;
   final bool isLoading;
+  final bool isImageRequest;
 
   Message({
     required this.id,
@@ -13,6 +14,7 @@ class Message extends Equatable {
     this.text,
     this.imagePath,
     this.isLoading = false,
+    this.isImageRequest = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -22,11 +24,13 @@ class Message extends Equatable {
       'isUser': isUser,
       'imagePath': imagePath,
       'isLoading': isLoading,
+      'isImageRequest': isImageRequest,
     };
   }
 
-  Message copyWith({String? text, bool? isLoading}) {
+  Message copyWith({String? text, bool? isLoading, bool? isImageRequest}) {
     return Message(
+      isImageRequest: isImageRequest ?? this.isImageRequest,
       id: id,
       isUser: isUser,
       text: text ?? this.text,
@@ -36,7 +40,14 @@ class Message extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, isUser, text, imagePath, isLoading];
+  List<Object?> get props => [
+    id,
+    isUser,
+    text,
+    imagePath,
+    isLoading,
+    isImageRequest,
+  ];
 
   factory Message.fromJson(Map<String, dynamic> map) {
     return Message(
@@ -45,6 +56,7 @@ class Message extends Equatable {
       isUser: map['isUser'] ?? false,
       imagePath: map['imagePath'],
       isLoading: map['isLoading'] ?? false,
+      isImageRequest: map['isImageRequest'] ?? false,
     );
   }
 }

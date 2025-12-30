@@ -17,7 +17,7 @@ class ChatBubble extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Row(
           children: [
-            Text('Thinking'),
+            Text(message.isImageRequest ? 'Analyzing image' : 'Thinking'),
             SizedBox(width: 5),
             LoadingAnimationWidget.staggeredDotsWave(
               color: Colors.white,

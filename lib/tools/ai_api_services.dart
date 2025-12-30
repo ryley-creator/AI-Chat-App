@@ -21,8 +21,8 @@ class ApiService {
           headers: {
             "Authorization": "Bearer $apiKey",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://your-app-name.com",
-            "X-Title": "AI Chat App",
+            'HTTP-Referer': 'https://yourapp.com',
+            'X-Title': 'Flutter AI Chat App',
           },
         ),
       );
@@ -54,41 +54,50 @@ class ImageService {
 class ImageToTextService {
   final String apiKey = getApiKey();
   static const String baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
-  final Dio dio = Dio();
+
+  final Dio dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+    ),
+  );
 
   Future<String> sendImageMessage({
     required String prompt,
     required String base64Image,
   }) async {
-    final response = await dio.post(
-      baseUrl,
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $apiKey',
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://yourapp.com',
-          'X-Title': 'Chat App',
-        },
-      ),
-      data: {
-        'model': 'openai/gpt-4o-mini',
-        'messages': [
-          {
-            'role': 'user',
-            'content': [
-              {
-                'type': 'text',
-                'text': prompt.isEmpty ? 'Describe the image' : prompt,
-              },
-              {
-                'type': 'image_url',
-                'image_url': {'url': 'data:image/jpeg;base64,$base64Image'},
-              },
-            ],
+    try {
+      final response = await dio.post(
+        baseUrl,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
           },
-        ],
-      },
-    );
-    return response.data['choices'][0]['message']['content'];
+        ),
+        data: {
+          'model': 'nvidia/nemotron-nano-12b-v2-vl:free',
+          'messages': [
+            {
+              'role': 'user',
+              'content': [
+                {
+                  'type': 'text',
+                  'text': prompt.isEmpty ? 'Describe the image' : prompt,
+                },
+                {
+                  'type': 'image_url',
+                  'image_url': {'url': 'data:image/jpeg;base64,$base64Image'},
+                },
+              ],
+            },
+          ],
+        },
+      );
+
+      return response.data['choices']?[0]?['message']?['content'] ?? '';
+    } catch (e) {
+      return 'Error: could not analyze image';
+    }
   }
 }

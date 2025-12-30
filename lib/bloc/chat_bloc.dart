@@ -81,26 +81,39 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           ),
         );
       }
+      final aiMessageId = DateTime.now().microsecondsSinceEpoch.toString();
+
+      final aiLoadingMessage = Message(
+        id: aiMessageId,
+        isUser: false,
+        isLoading: true,
+        isImageRequest: true,
+      );
+
+      emit(state.copyWith(messages: [...messages, aiLoadingMessage]));
+
       final base64Image = await imageToBase64(event.image);
       final response = await imageToTextService.sendImageMessage(
         prompt: event.propmt,
         base64Image: base64Image,
       );
-      final aiMessage = Message(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        isUser: false,
-        text: response,
-      );
-      messages = [...state.messages, aiMessage];
+      final updatedMessages = state.messages.map((m) {
+        if (m.id == aiMessageId) {
+          return m.copyWith(text: response, isLoading: false);
+        }
+        return m;
+      }).toList();
+
+      emit(state.copyWith(messages: updatedMessages));
 
       await historyService.updateChatMessages(
         uid: event.uid,
         chatId: sessionId,
-        messages: messages,
+        messages: updatedMessages,
       );
 
       if (messages.length == 2) {
-        final title = await generateTitle(messages);
+        final title = await generateTitle(updatedMessages);
 
         await historyService.updateChatTitle(
           uid: event.uid,
@@ -117,7 +130,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           emit(state.copyWith(history: updatedHistory));
         }
       }
-      emit(state.copyWith(messages: messages, status: ChatStatus.loaded));
+      emit(
+        state.copyWith(messages: updatedMessages, status: ChatStatus.loaded),
+      );
     } on DioException catch (error) {
       if (error.response?.statusCode == 402) {
         emit(
@@ -140,105 +155,135 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
-    if (state.status == ChatStatus.loading) return;
+    try {
+      if (state.status == ChatStatus.loading) return;
 
-    final userMessage = Message(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      isUser: true,
-      text: event.message,
-    );
-
-    List<Message> messages = [...state.messages, userMessage];
-
-    emit(state.copyWith(messages: messages, status: ChatStatus.loading));
-
-    String? sessionId = state.activeSessionId;
-
-    if (sessionId == null) {
-      sessionId = await historyService.createChat(
-        event.uid,
-        messages,
-        'Generating...',
+      final userMessage = Message(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        isUser: true,
+        text: event.message,
       );
 
-      final newHistoryItem = History(
-        id: sessionId,
-        messages: messages,
-        createdAt: DateTime.now(),
-        title: 'Generating...',
-      );
+      List<Message> messages = [...state.messages, userMessage];
 
-      emit(
-        state.copyWith(
-          activeSessionId: sessionId,
-          history: [...state.history, newHistoryItem],
-        ),
-      );
-    }
-    final aiMessageId = DateTime.now().microsecondsSinceEpoch.toString();
+      emit(state.copyWith(messages: messages, status: ChatStatus.loading));
 
-    final aiLoadingMessage = Message(
-      id: aiMessageId,
-      isUser: false,
-      isLoading: true,
-    );
+      String? sessionId = state.activeSessionId;
 
-    emit(state.copyWith(messages: [...messages, aiLoadingMessage]));
-    final contextMessages = buildAiMessages(messages).take(15).toList();
-    final response = await geminiService.sendMessage(contextMessages);
-    final updatedMessages = state.messages.map((m) {
-      if (m.id == aiMessageId) {
-        return m.copyWith(text: response, isLoading: false);
+      if (sessionId == null) {
+        sessionId = await historyService.createChat(
+          event.uid,
+          messages,
+          'Generating...',
+        );
+
+        final newHistoryItem = History(
+          id: sessionId,
+          messages: messages,
+          createdAt: DateTime.now(),
+          title: 'Generating...',
+        );
+
+        emit(
+          state.copyWith(
+            activeSessionId: sessionId,
+            history: [...state.history, newHistoryItem],
+          ),
+        );
       }
-      return m;
-    }).toList();
+      final aiMessageId = DateTime.now().microsecondsSinceEpoch.toString();
 
-    emit(state.copyWith(messages: updatedMessages));
+      final aiLoadingMessage = Message(
+        id: aiMessageId,
+        isUser: false,
+        isLoading: true,
+      );
 
-    await historyService.updateChatMessages(
-      uid: event.uid,
-      chatId: sessionId,
-      messages: updatedMessages,
-    );
+      emit(state.copyWith(messages: [...messages, aiLoadingMessage]));
+      final contextMessages = buildAiMessages(messages).take(15).toList();
+      final response = await geminiService.sendMessage(contextMessages);
+      final updatedMessages = state.messages.map((m) {
+        if (m.id == aiMessageId) {
+          return m.copyWith(text: response, isLoading: false);
+        }
+        return m;
+      }).toList();
 
-    final historyIndex = state.history.indexWhere((h) => h.id == sessionId);
+      emit(state.copyWith(messages: updatedMessages));
 
-    if (historyIndex != -1) {
-      final updatedHistory = [...state.history];
-      updatedHistory[historyIndex] = updatedHistory[historyIndex].copyWith(
+      await historyService.updateChatMessages(
+        uid: event.uid,
+        chatId: sessionId,
         messages: updatedMessages,
       );
 
+      final historyIndex = state.history.indexWhere((h) => h.id == sessionId);
+
+      if (historyIndex != -1) {
+        final updatedHistory = [...state.history];
+        updatedHistory[historyIndex] = updatedHistory[historyIndex].copyWith(
+          messages: updatedMessages,
+        );
+
+        emit(
+          state.copyWith(
+            messages: [...updatedMessages],
+            history: updatedHistory,
+            status: ChatStatus.loaded,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(messages: updatedMessages, status: ChatStatus.loaded),
+        );
+      }
+
+      if (messages.length == 2) {
+        final title = await generateTitle(updatedMessages);
+
+        await historyService.updateChatTitle(
+          uid: event.uid,
+          chatId: sessionId,
+          title: title,
+        );
+
+        final updatedHistory = [...state.history];
+        final index = updatedHistory.indexWhere((h) => h.id == sessionId);
+
+        if (index != -1) {
+          updatedHistory[index] = updatedHistory[index].copyWith(title: title);
+
+          emit(state.copyWith(history: updatedHistory));
+        }
+      }
+    } on DioException catch (error) {
+      if (error.response!.statusCode == 402) {
+        emit(
+          state.copyWith(
+            messages: [
+              ...state.messages,
+              Message(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                isUser: false,
+                text:
+                    'Payment required to continue bro Im sorry but you had to pay lil bro',
+              ),
+            ],
+          ),
+        );
+      }
       emit(
         state.copyWith(
-          messages: [...updatedMessages],
-          history: updatedHistory,
-          status: ChatStatus.loaded,
+          messages: [
+            ...state.messages,
+            Message(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              isUser: false,
+              text: 'Connection error ocurred!',
+            ),
+          ],
         ),
       );
-    } else {
-      emit(
-        state.copyWith(messages: updatedMessages, status: ChatStatus.loaded),
-      );
-    }
-
-    if (messages.length == 2) {
-      final title = await generateTitle(updatedMessages);
-
-      await historyService.updateChatTitle(
-        uid: event.uid,
-        chatId: sessionId,
-        title: title,
-      );
-
-      final updatedHistory = [...state.history];
-      final index = updatedHistory.indexWhere((h) => h.id == sessionId);
-
-      if (index != -1) {
-        updatedHistory[index] = updatedHistory[index].copyWith(title: title);
-
-        emit(state.copyWith(history: updatedHistory));
-      }
     }
   }
 
