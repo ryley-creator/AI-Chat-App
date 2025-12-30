@@ -39,7 +39,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return BlocListener<ChatBloc, ChatState>(
       listenWhen: (prev, curr) {
-        return prev.messages.length != curr.messages.length;
+        return prev.messages != curr.messages;
       },
       listener: (context, state) {
         scrollDown();
@@ -102,10 +102,11 @@ class _ChatPageState extends State<ChatPage> {
                                     child: ListView.builder(
                                       controller: scrollController,
                                       itemCount: state.messages.length,
-                                      itemBuilder: (context, index) =>
-                                          ChatBubble(
-                                            message: state.messages[index],
-                                          ),
+                                      itemBuilder: (context, index) {
+                                        return ChatBubble(
+                                          message: state.messages[index],
+                                        );
+                                      },
                                     ),
                                   ),
                             SizedBox(height: 5),

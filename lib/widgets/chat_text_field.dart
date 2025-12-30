@@ -24,8 +24,8 @@ class ChatTextField extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text("Take photo"),
+                leading: Icon(Icons.camera_alt),
+                title: Text('Take photo'),
                 onTap: () async {
                   Navigator.pop(context);
                   final image = await ImagePicker().pickImage(
@@ -38,8 +38,8 @@ class ChatTextField extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo),
-                title: const Text("Choose from gallery"),
+                leading: Icon(Icons.photo),
+                title: Text('Choose from Gallery'),
                 onTap: () async {
                   Navigator.pop(context);
                   final image = await ImagePicker().pickImage(

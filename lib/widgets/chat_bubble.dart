@@ -1,16 +1,32 @@
 import 'dart:io';
 
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+
 import '../imports/imports.dart';
 
 class ChatBubble extends StatelessWidget {
   final Message message;
-  final String hola = 'String hello world i am going to say';
   const ChatBubble({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (message.isLoading) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Row(
+          children: [
+            Text('Thinking'),
+            SizedBox(width: 5),
+            LoadingAnimationWidget.staggeredDotsWave(
+              color: Colors.white,
+              size: 22,
+            ),
+          ],
+        ),
+      );
+    }
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: message.imagePath != null
@@ -41,7 +57,7 @@ class ChatBubble extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      message.text,
+                      message.text!,
                       style: TextStyle(
                         color: message.isUser
                             ? Colors.white
@@ -68,7 +84,7 @@ class ChatBubble extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  message.text,
+                  message.text!,
                   style: TextStyle(
                     color: message.isUser
                         ? Colors.white

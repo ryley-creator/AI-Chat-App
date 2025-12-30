@@ -175,20 +175,30 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ),
       );
     }
-    final contextMessages = buildAiMessages(messages).take(15).toList();
-    final response = await geminiService.sendMessage(contextMessages);
-    final aiMessage = Message(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+    final aiMessageId = DateTime.now().microsecondsSinceEpoch.toString();
+
+    final aiLoadingMessage = Message(
+      id: aiMessageId,
       isUser: false,
-      text: response,
+      isLoading: true,
     );
 
-    messages = [...messages, aiMessage];
+    emit(state.copyWith(messages: [...messages, aiLoadingMessage]));
+    final contextMessages = buildAiMessages(messages).take(15).toList();
+    final response = await geminiService.sendMessage(contextMessages);
+    final updatedMessages = state.messages.map((m) {
+      if (m.id == aiMessageId) {
+        return m.copyWith(text: response, isLoading: false);
+      }
+      return m;
+    }).toList();
+
+    emit(state.copyWith(messages: updatedMessages));
 
     await historyService.updateChatMessages(
       uid: event.uid,
-      chatId: sessionId!,
-      messages: messages,
+      chatId: sessionId,
+      messages: updatedMessages,
     );
 
     final historyIndex = state.history.indexWhere((h) => h.id == sessionId);
@@ -196,22 +206,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (historyIndex != -1) {
       final updatedHistory = [...state.history];
       updatedHistory[historyIndex] = updatedHistory[historyIndex].copyWith(
-        messages: messages,
+        messages: updatedMessages,
       );
 
       emit(
         state.copyWith(
-          messages: messages,
+          messages: [...updatedMessages],
           history: updatedHistory,
           status: ChatStatus.loaded,
         ),
       );
     } else {
-      emit(state.copyWith(messages: messages, status: ChatStatus.loaded));
+      emit(
+        state.copyWith(messages: updatedMessages, status: ChatStatus.loaded),
+      );
     }
 
     if (messages.length == 2) {
-      final title = await generateTitle(messages);
+      final title = await generateTitle(updatedMessages);
 
       await historyService.updateChatTitle(
         uid: event.uid,
@@ -252,7 +264,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   List<Map<String, String>> buildAiMessages(List<Message> messages) {
     return messages.map((m) {
-      return {"role": m.isUser ? "user" : "assistant", "content": m.text};
+      return {"role": m.isUser ? "user" : "assistant", "content": m.text!};
     }).toList();
   }
 
